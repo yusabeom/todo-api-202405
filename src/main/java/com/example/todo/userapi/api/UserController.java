@@ -1,12 +1,14 @@
 package com.example.todo.userapi.api;
 
+import com.example.todo.userapi.dto.request.UserSignUpRequestDTO;
+import com.example.todo.userapi.dto.response.UserSignUpResponseDTO;
 import com.example.todo.userapi.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Slf4j
@@ -29,6 +31,29 @@ public class UserController {
         boolean resultFlag = userService.isDuplicate(email);
         log.info("중복??? - {}", resultFlag);
         return ResponseEntity.ok().body(resultFlag);
+    }
+
+    // 회원가입 요청 처리
+    // POST: /api/auth
+    @PostMapping
+    public ResponseEntity<?> signUp(
+            @Validated @RequestBody UserSignUpRequestDTO dto,
+            BindingResult result
+    ) {
+        log.info("/api/auth POST ! - {}", dto);
+
+        if (result.hasErrors()) {
+            log.warn(result.toString());
+            return ResponseEntity.badRequest()
+                    .body(result.getFieldErrors());
+        }
+        try {
+            UserSignUpResponseDTO responseDTO = userService.create(dto);
+            return ResponseEntity.ok().body(responseDTO);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
 }
