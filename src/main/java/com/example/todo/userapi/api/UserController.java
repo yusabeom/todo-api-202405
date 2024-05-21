@@ -2,6 +2,7 @@ package com.example.todo.userapi.api;
 
 import com.example.todo.userapi.dto.request.LoginRequestDTO;
 import com.example.todo.userapi.dto.request.UserSignUpRequestDTO;
+import com.example.todo.userapi.dto.response.LoginResponseDTO;
 import com.example.todo.userapi.dto.response.UserSignUpResponseDTO;
 import com.example.todo.userapi.entity.User;
 import com.example.todo.userapi.service.UserService;
@@ -77,9 +78,10 @@ public class UserController {
         ResponseEntity<List<FieldError>> response = getFieldErrorResponseEntity(result);
         if (response != null) return response;
         try {
-            String login = userService.login(dto);
-            return ResponseEntity.ok().body(login);
+            LoginResponseDTO responseDTO = userService.login(dto);
+            return ResponseEntity.ok().body(responseDTO);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
