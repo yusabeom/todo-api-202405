@@ -1,9 +1,9 @@
 package com.example.todo.config;
-
 import com.example.todo.exception.CustomAuthenticationEntryPoint;
 import com.example.todo.filter.JWTExceptionFilter;
 import com.example.todo.filter.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -17,7 +17,11 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import java.util.List;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity // 자동 권한 검사를 컨트롤러의 메서드에서 전역적으로 수행하기 위한 설정.
@@ -27,6 +31,10 @@ public class WebSecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final JWTExceptionFilter jwtExceptionFilter;
+    private final AccessDeniedHandler accessDeniedHandler;
+
+    @Value("${security.permit-all-patterns}")
+    private List<String> permitAllPatterns;
 
     // 시큐리티 기본 설정 (권한 처리, 초기 로그인 화면 없애기 ....)
     @Bean // 라이브러리 클래스 같은 내가 만들지 않은 객체를 등록해서 주입받기 위한 아노테이션.
@@ -52,20 +60,23 @@ public class WebSecurityConfig {
                         authorizeRequests
                                 // '/api/todos' 라는 요청이 post로 들어오고, Role 값이 ADMIN인 경우 권한 검사 없이 허용하겠다.
                                 // .requestMatchers(HttpMethod.POST, "/api/todos").hasRole("ADMIN")
+
                                 // /api/auth/**은 permit이지만, /promote는 검증이 필요하기 때문에 추가. (순서 조심!)
-                                .requestMatchers(HttpMethod.PUT, "/api/auth/promote")
-                                .authenticated()
+                                .requestMatchers(HttpMethod.PUT, "/api/auth/promote").hasAnyRole("COMMON")
+                                .requestMatchers(HttpMethod.PUT, "/api/auth/promote").authenticated()
                                 .requestMatchers("/api/auth/load-profile").authenticated()
                                 // '/api/auth'로 시작하는 요청과 '/'요청은 권한 검사 없이 허용하겠다.
                                 .requestMatchers("/", "/api/auth/**")
                                 .permitAll()
                                 // 위에서 따로 설정하지 않은 나머지 요청들은 권한 검사가 필요하다.
                                 .anyRequest().authenticated()
-                );
-//                .exceptionHandling(ExceptionHandling -> {
-//                    // 인증 과정에서 예외가 발생한 경우 예외를 전달한다.
-//                    ExceptionHandling.authenticationEntryPoint(new CustomAuthenticationEntryPoint())
-//                })
+                )
+                .exceptionHandling(ExceptionHandling -> {
+                    // 인증 과정에서 예외가 발생한 경우 예외를 전달한다. (401)
+                    // ExceptionHandling.authenticationEntryPoint(entryPoint);
+                    // 인가 과정에서 예외가 발생한 경우 예외를 전달한다. (403)
+                    ExceptionHandling.accessDeniedHandler(accessDeniedHandler);
+                });
 
         return http.build();
     }

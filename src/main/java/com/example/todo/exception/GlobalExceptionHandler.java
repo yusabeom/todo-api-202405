@@ -1,5 +1,4 @@
 package com.example.todo.exception;
-
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -13,7 +12,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 // 예외 상황에 따른 응답을 REST 방식으로 클라이언트에게 전달할 수 있다.
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
     /*
     @RestControllerAdvice로 등록된 전역 예외 처리 방식은 Controller에서 발생된 예외만 처리합니다.
     Service, Repository, Filter에서 발생하는 예외는 처리하지 못합니다.
@@ -30,6 +28,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> handleRuntimeException(RuntimeException e) {
         return ResponseEntity.badRequest().body(e.getMessage());
     }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<?> handleRuntimeException(IllegalArgumentException e) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
